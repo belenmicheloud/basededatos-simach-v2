@@ -35,8 +35,8 @@ export default function Index() {
           <div className="flex items-center gap-4 md:gap-10">
             <div className="hidden md:flex flex-col items-end">
               <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Recursos Humanos</span>
-              <a href="mailto:rrhh@grumaq.com.ar" className="text-base font-semibold text-foreground hover:text-primary transition-colors">
-                rrhh@grumaq.com.ar
+              <a href="mailto:rrhh@simach.com.ar" className="text-base font-semibold text-foreground hover:text-primary transition-colors">
+                rrhh@simach.com.ar
               </a>
             </div>
             <div className="hidden md:block h-10 w-px bg-border"></div>
@@ -75,21 +75,16 @@ export default function Index() {
 
               <div className="space-y-4 max-w-[60ch]">
                 <div>
-                  <h2 className="text-sm md:text-base font-semibold text-foreground mb-1">Experiencia y cobertura</h2>
+                  <h2 className="text-sm md:text-base font-semibold text-foreground mb-1">Marcamos el Camino en Soluciones Industriales y Viales</h2>
                   <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-                    Con más de tres décadas en el mercado, <strong className="text-foreground font-semibold">GRUMAQ</strong> se consolida como un actor clave en la región centro, especializado en la comercialización, alquiler y soporte integral de maquinaria para construcción, agroindustria, izaje y logística de materiales.
+                    Desde servicios industriales de alta calidad hasta el alquiler y venta de maquinaria vial, en SIMACH S.R.L. trabajamos con responsabilidad y profesionalismo para garantizar resultados que superan expectativas. centro, especializado en la comercialización, alquiler y soporte integral de maquinaria para construcción, agroindustria, izaje y logística de materiales.
                   </p>
                 </div>
                 <div>
-                  <h2 className="text-sm md:text-base font-semibold text-foreground mb-1">Crecimiento estratégico</h2>
+                  <h2 className="text-sm md:text-base font-semibold text-foreground mb-1">Nuestro compromiso</h2>
                   <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-                    Desde 1991, impulsamos nuestro desarrollo de la mano de marcas globales como <strong className="text-foreground font-semibold">CASE Construction</strong> y <strong className="text-foreground font-semibold">FPT</strong>, fortaleciendo nuestra operación con presencia en San Lorenzo (Santa Fe) y Córdoba Capital.
-                  </p>
-                </div>
-                <div>
-                  <h2 className="text-sm md:text-base font-semibold text-foreground mb-1">Propuesta de valor</h2>
-                  <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-                    Un equipo técnico altamente capacitado y una cultura enfocada en el servicio —<em className="text-foreground not-italic font-medium">"Fuerte en Servicios"</em>— nos permiten acompañar a cada cliente con soluciones eficientes, cercanas y orientadas a resultados en todas las etapas del negocio.
+                    Nos comprometemos a superar las expectativas de nuestros clientes con atención eficiente, segura y responsable, cuidando la salud y el medio ambiente.
+                               
                   </p>
                 </div>
               </div>
