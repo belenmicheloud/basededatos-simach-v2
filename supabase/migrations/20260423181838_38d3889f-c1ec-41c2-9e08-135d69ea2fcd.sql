@@ -1,0 +1,1 @@
+ALTER TABLE public.job_applications ADD COLUMN years_experience TEXT;
