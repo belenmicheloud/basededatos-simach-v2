@@ -10,7 +10,7 @@ import { Truck, Wrench, Cog, Construction } from "lucide-react";
 const heroImages = [hero1, hero2, hero3];
 
 const features = [
-  { icon: Forklift, title: "Autoelevadores Hangcha", desc: "Venta de autoelevadores para la industria y la logística" },
+  { icon: Truck, title: "Autoelevadores Hangcha", desc: "Venta de autoelevadores para la industria y la logística" },
   { icon: Shovel, title: "Excavadoras Sunward", desc: "Maquinaria pesada para construcción e industria" },
   { icon: Wrench, title: "Servicios industriales", desc: "Montaje, mantenimiento y proyectos industriales" },
   { icon: Truck, title: "Rental", desc: "Alquiler de equipos viales en San Lorenzo y Gran Rosario" },
