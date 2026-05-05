@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import hero1 from "@/assets/hero-1.jpg";
 import hero2 from "@/assets/hero-2-graded.jpg";
 import hero3 from "@/assets/hero-3-graded.jpg";
-import logoGrumaq from "@/assets/logo-grumaq.png";
+import logoSimach from "@/assets/logo-simach.png";
 import ApplicationForm from "@/components/ApplicationForm";
 import ActiveOpenings from "@/components/ActiveOpenings";
 import { Forklift, Shovel, Wrench, Truck } from "lucide-react";
@@ -29,7 +29,7 @@ export default function Index() {
       <nav className="bg-card border-b-2 border-border h-20 shrink-0 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto h-full px-4 md:px-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={logoGrumaq} alt="Logo GRUMAQ" width={160} height={48} className="h-10 md:h-12 w-auto" />
+            <img src={logoSimach} alt="Logo SIMACH" width={160} height={48} className="h-10 md:h-12 w-auto" />
           </div>
 
           <div className="flex items-center gap-4 md:gap-10">
