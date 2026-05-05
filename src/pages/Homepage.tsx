@@ -41,8 +41,7 @@ export default function Index() {
             </div>
             <div className="hidden md:block h-10 w-px bg-border"></div>
             <div className="hidden sm:flex flex-col text-xs md:text-sm font-medium text-muted-foreground">
-              <a href="https://www.grumaq.com.ar" className="hover:text-primary transition-colors">grumaq.com.ar</a>
-              <a href="https://usados.grumaq.com.ar" className="hover:text-primary transition-colors">usados.grumaq.com.ar</a>
+              <a href="https://www.simach.com.ar" className="hover:text-primary transition-colors">simach.com.ar</a>
             </div>
           </div>
         </div>
