@@ -5,12 +5,12 @@ import hero3 from "@/assets/hero-3-graded.jpg";
 import logoGrumaq from "@/assets/logo-grumaq.png";
 import ApplicationForm from "@/components/ApplicationForm";
 import ActiveOpenings from "@/components/ActiveOpenings";
-import { Truck, Wrench, Cog, Construction } from "lucide-react";
+import { Forklift, Shovel, Wrench, Truck } from "lucide-react";
 
 const heroImages = [hero1, hero2, hero3];
 
 const features = [
-  { icon: Truck, title: "Autoelevadores Hangcha", desc: "Venta de autoelevadores para la industria y la logística" },
+  { icon: Forklift, title: "Autoelevadores Hangcha", desc: "Venta de autoelevadores para la industria y la logística" },
   { icon: Shovel, title: "Excavadoras Sunward", desc: "Maquinaria pesada para construcción e industria" },
   { icon: Wrench, title: "Servicios industriales", desc: "Montaje, mantenimiento y proyectos industriales" },
   { icon: Truck, title: "Rental", desc: "Alquiler de equipos viales en San Lorenzo y Gran Rosario" },
@@ -110,7 +110,7 @@ export default function Index() {
                     Trabajá con nosotros
                   </h2>
                   <p className="text-muted-foreground text-sm md:text-base">
-                    Esta es la página oficial de postulaciones de GRUMAQ. Dejanos tu perfil y te contactamos cuando surja una oportunidad.
+                    Esta es la página oficial de postulaciones de Simach. Dejanos tu perfil y te contactamos cuando surja una oportunidad.
                   </p>
                 </div>
               </div>
@@ -165,16 +165,15 @@ export default function Index() {
       <footer className="py-8 bg-secondary">
         <div className="container mx-auto px-4 text-center space-y-2">
           <p className="text-secondary-foreground/90 text-sm">
-            Maquinaria Vial CASE Construction | Servicio Técnico Oficial | Motores FPT Industrial | Alquiler de Grúas
+            Autoelevadores Hangcha | Excavadoras Sunward | Servicios Industriales | Rental de Equipos
           </p>
           <p className="text-secondary-foreground text-sm font-medium">
-            <a href="https://www.grumaq.com.ar" className="hover:text-primary transition-colors">WWW.GRUMAQ.COM.AR</a>
+            <a href="https://www.simach.com.ar" className="hover:text-primary transition-colors">WWW.SIMACH.COM.AR</a>
             {" — "}
-            <a href="https://usados.grumaq.com.ar" className="hover:text-primary transition-colors">USADOS.GRUMAQ.COM.AR</a>
-            {" — CEL: (3476) 591425"}
+            {" — CEL: (341) 6751108"}
           </p>
           <p className="text-secondary-foreground/60 text-xs pt-2">
-            © {new Date().getFullYear()} GRUMAQ SRL
+            © {new Date().getFullYear()} SIMACH SRL
           </p>
         </div>
       </footer>
