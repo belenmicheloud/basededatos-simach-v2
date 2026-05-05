@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
-const ADMIN_PASSWORD = "RRHHGRUMAQ2026";
+const ADMIN_PASSWORD = "RRHHSIMACH2026";
 
 export default function AdminLogin() {
   const [password, setPassword] = useState("");
