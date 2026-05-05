@@ -10,10 +10,10 @@ import { Truck, Wrench, Cog, Construction } from "lucide-react";
 const heroImages = [hero1, hero2, hero3];
 
 const features = [
-  { icon: Construction, title: "Maquinaria Vial", desc: "Venta de maquinaria vial CASE Construction" },
-  { icon: Wrench, title: "Servicio Técnico", desc: "Servicio técnico oficial y repuestos originales" },
-  { icon: Cog, title: "Motores FPT", desc: "Distribuidor oficial de motores FPT Industrial" },
-  { icon: Truck, title: "Alquiler", desc: "Alquiler de grúas y equipos para obra" },
+  { icon: Forklift, title: "Autoelevadores Hangcha", desc: "Venta de autoelevadores para la industria y la logística" },
+  { icon: Shovel, title: "Excavadoras Sunward", desc: "Maquinaria pesada para construcción e industria" },
+  { icon: Wrench, title: "Servicios industriales", desc: "Montaje, mantenimiento y proyectos industriales" },
+  { icon: Truck, title: "Rental", desc: "Alquiler de equipos viales en San Lorenzo y Gran Rosario" },
 ];
 
 export default function Index() {
