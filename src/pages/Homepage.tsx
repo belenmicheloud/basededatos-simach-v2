@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import hero1 from "@/assets/hero-1.jpg";
-import hero2 from "@/assets/hero-2-graded.jpg";
-import hero3 from "@/assets/hero-3-graded.jpg";
+import hero1 from "@/assets/hero-simach-1.jpg";
+import hero2 from "@/assets/hero-simah-2.jpg";
+import hero3 from "@/assets/hero-simach-3.jpg";
 import logoSimach from "@/assets/logo-simach.png";
 import ApplicationForm from "@/components/ApplicationForm";
 import ActiveOpenings from "@/components/ActiveOpenings";
