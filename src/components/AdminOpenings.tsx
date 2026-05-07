@@ -551,4 +551,3 @@ export default function AdminOpenings() {
     </div>
   );
 }
-fix AdminOpenings date field
