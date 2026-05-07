@@ -24,6 +24,7 @@ type Opening = {
   requirements: string;
   schedule_type: string | null;
   work_mode: string | null;
+  start_date?: string | null;
   is_active: boolean;
   created_at: string;
   custom_questions?: FilterQuestion[] | null;
@@ -47,6 +48,7 @@ export default function AdminOpenings() {
   const [requirements, setRequirements] = useState("");
   const [scheduleType, setScheduleType] = useState("");
   const [workMode, setWorkMode] = useState("");
+  const [startDate, setStartDate] = useState("");
   const [questions, setQuestions] = useState<FilterQuestion[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [editing, setEditing] = useState<Opening | null>(null);
@@ -113,7 +115,7 @@ export default function AdminOpenings() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!position || !area || !branch || !description.trim() || !scheduleType || !workMode) {
+    if (!position || !area || !branch || !description.trim() || !scheduleType || !workMode || !startDate) {
       toast({ title: "Completá todos los campos", variant: "destructive" });
       return;
     }
@@ -132,6 +134,7 @@ export default function AdminOpenings() {
         requirements: requirements.trim(),
         schedule_type: scheduleType,
         work_mode: workMode,
+        start_date: startDate,
         custom_questions: finalQuestions,
       })
       .select()
@@ -150,6 +153,7 @@ export default function AdminOpenings() {
       setRequirements("");
       setScheduleType("");
       setWorkMode("");
+      setStartDate("");
       setQuestions([]);
       toast({ title: "Búsqueda creada" });
     }
@@ -181,7 +185,7 @@ export default function AdminOpenings() {
   const handleSaveEdit = async () => {
     if (!editing) return;
 
-    if (!editing.position || !editing.area || !editing.branch || !editing.description.trim() || !editing.schedule_type || !editing.work_mode) {
+    if (!editing.position || !editing.area || !editing.branch || !editing.description.trim() || !editing.schedule_type || !editing.work_mode || !editing.start_date) {
       toast({ title: "Completá todos los campos", variant: "destructive" });
       return;
     }
@@ -198,6 +202,7 @@ export default function AdminOpenings() {
       requirements: (editing.requirements || "").trim(),
       schedule_type: editing.schedule_type,
       work_mode: editing.work_mode,
+      start_date: editing.start_date,
       custom_questions: finalQuestions,
     }).eq("id", editing.id);
 
@@ -242,7 +247,7 @@ export default function AdminOpenings() {
           </Select>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-3 md:grid-cols-3">
           <Select value={scheduleType} onValueChange={setScheduleType}>
             <SelectTrigger><SelectValue placeholder="Tipo de jornada" /></SelectTrigger>
             <SelectContent>
@@ -256,6 +261,12 @@ export default function AdminOpenings() {
               {WORK_MODES.map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}
             </SelectContent>
           </Select>
+
+          <Input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
         </div>
 
         <Textarea
@@ -331,7 +342,13 @@ export default function AdminOpenings() {
                   {o.area} · {o.branch}
                 </p>
 
-                <div className="flex flex-wrap gap-1.5 mb-2">
+                {o.start_date && (
+                  <p className="text-xs text-muted-foreground">
+                    Inicio: {new Date(o.start_date).toLocaleDateString("es-AR")}
+                  </p>
+                )}
+
+                <div className="flex flex-wrap gap-1.5 mb-2 mt-2">
                   {o.schedule_type && (
                     <Badge variant="outline" className="text-xs gap-1">
                       <Clock className="h-3 w-3" />{o.schedule_type}
@@ -438,7 +455,7 @@ export default function AdminOpenings() {
                 </div>
               </div>
 
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-3 md:grid-cols-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs">Tipo de jornada</Label>
                   <Select value={editing.schedule_type ?? ""} onValueChange={(v) => setEditing({ ...editing, schedule_type: v })}>
@@ -457,6 +474,15 @@ export default function AdminOpenings() {
                       {WORK_MODES.map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Fecha de inicio</Label>
+                  <Input
+                    type="date"
+                    value={editing.start_date ?? ""}
+                    onChange={(e) => setEditing({ ...editing, start_date: e.target.value })}
+                  />
                 </div>
               </div>
 
@@ -525,3 +551,4 @@ export default function AdminOpenings() {
     </div>
   );
 }
+fix AdminOpenings date field
