@@ -45,6 +45,7 @@ type FunnelRow = {
   diasTotales: number | null;
   stageTimeline: StageTimeline[];
   hiredTimelines: HiredTimeline[];
+  discardByReason: { name: string; value: number }[];
 };
 
 function CustomTooltip({ active, payload, label }: any) {
@@ -146,6 +147,29 @@ function FunnelCard({ row, expanded, onToggle }: { row: FunnelRow; expanded: boo
                 <FunnelBar value={row.descartados} max={row.total} color="#ef4444" />
               </div>
             </div>
+
+            {/* Motivos de descarte */}
+            {row.discardByReason.length > 0 && (
+              <div className="mt-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Motivos de descarte</p>
+                <div className="space-y-1.5">
+                  {row.discardByReason.map((r, i) => (
+                    <div key={i} className="space-y-0.5">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground truncate pr-2">{r.name}</span>
+                        <span className="font-semibold shrink-0">{r.value}</span>
+                      </div>
+                      <div className="flex-1 bg-muted rounded-full h-1.5">
+                        <div
+                          className="h-1.5 rounded-full bg-destructive/70 transition-all duration-500"
+                          style={{ width: `${Math.round(r.value / row.descartados * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Timeline de etapas - uno por cada contratado */}
             {row.hiredTimelines.length > 0 && (
@@ -287,12 +311,24 @@ export default function AdminFunnelReport() {
       const diasTotales = hiredTimelines.length > 0 ? hiredTimelines[0].diasTotales : null;
       const stageTimeline = hiredTimelines.length > 0 ? hiredTimelines[0].stages : [];
 
+      // Discard reasons breakdown
+      const discardedApps = oApps.filter(a => a.status === "descartado" || a.status === "rechazado");
+      const reasonMap: Record<string, number> = {};
+      discardedApps.forEach(a => {
+        const reason = (a as any).discard_reason || "Sin motivo";
+        reasonMap[reason] = (reasonMap[reason] || 0) + 1;
+      });
+      const discardByReason = Object.entries(reasonMap)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value);
+
       return {
         opening, apps: oApps, total,
         contactados, enRevision, entrevistados, contratados,
         descartados, nuevos,
         conversionRate, entrevistaRate,
         diasTotales, stageTimeline, hiredTimelines,
+        discardByReason,
       };
     });
   }, [openings, apps]);
