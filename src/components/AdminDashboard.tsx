@@ -76,7 +76,7 @@ export default function AdminDashboard() {
     const total = apps.length;
     const contratados = apps.filter(a => a.status === "contratado").length;
     const enProceso = apps.filter(a =>
-      ["contactado","en_revision","entrevistado"].includes(a.status)
+      ["contactado","entrevistado"].includes(a.status)
     ).length;
 
     const hiredApps = apps.filter(a => a.status === "contratado" && a.hired_at);
