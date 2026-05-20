@@ -13,7 +13,6 @@ type AppRow = JobApplication & { opening_id?: string | null };
 const STATUS_CHART_COLORS: Record<string, string> = {
   nuevo:        "#3b82f6",
   contactado:   "#06b6d4",
-  en_revision:  "#f59e0b",
   entrevistado: "#8b5cf6",
   contratado:   "#22c55e",
   rechazado:    "#ef4444",
