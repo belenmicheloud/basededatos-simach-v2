@@ -31,7 +31,6 @@ export default function Admin() {
     const { data, error } = await supabase
       .from("job_applications")
       .select("*")
-      .is("opening_id", null)
       .order("created_at", { ascending: false });
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
