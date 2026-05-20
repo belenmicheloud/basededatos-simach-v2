@@ -11,7 +11,7 @@ import { JobApplication, ApplicationStatus, STATUS_LABELS, STATUS_COLORS, ACTIVE
 import {
   Download, Briefcase, MapPin, Building2, ChevronDown, ChevronUp,
   Mail, Phone, Clock, Calendar, CalendarCheck, User, Trash2,
-  IdCard, Search, UserMinus, History,
+  IdCard, Search, UserMinus, History, Pencil,
 } from "lucide-react";
 
 type Opening = {
@@ -52,11 +52,15 @@ export default function AdminOpeningApplications() {
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
 
+  // Status change dialog
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [pendingStatus, setPendingStatus] = useState<ApplicationStatus | null>(null);
   const [pendingDate, setPendingDate] = useState<string>("");
   const [pendingDiscard, setPendingDiscard] = useState<string>("");
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [editingHistoryApp, setEditingHistoryApp] = useState<string | null>(null);
+  const [editingHistoryIdx, setEditingHistoryIdx] = useState<number | null>(null);
+  const [editHistoryDate, setEditHistoryDate] = useState<string>("");
 
   const fetchAll = async () => {
     const [openRes, appsRes] = await Promise.all([
@@ -129,6 +133,24 @@ export default function AdminOpeningApplications() {
     setStatusDialogOpen(false);
     setPendingId(null);
     setPendingStatus(null);
+  };
+
+  const saveHistoryEdit = async (id: string, index: number) => {
+    const app = applications.find(a => a.id === id);
+    const history: any[] = (app?.status_history as any) || [];
+    const newHistory = history.map((h, i) => i === index ? { ...h, date: editHistoryDate } : h);
+    const ok = await persist(id, { status_history: newHistory as any });
+    if (ok) { setEditingHistoryApp(null); setEditingHistoryIdx(null); toast({ title: "Historial actualizado" }); }
+  };
+
+  const deleteHistoryEntry = async (id: string, index: number) => {
+    const confirmed = window.confirm("Eliminar esta entrada del historial?");
+    if (!confirmed) return;
+    const app = applications.find(a => a.id === id);
+    const history: any[] = (app?.status_history as any) || [];
+    const newHistory = history.filter((_, i) => i !== index);
+    const ok = await persist(id, { status_history: newHistory as any });
+    if (ok) toast({ title: "Entrada eliminada" });
   };
 
   const handleCommentsBlur = async (id: string, value: string) => {
@@ -313,6 +335,7 @@ export default function AdminOpeningApplications() {
                               <p className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">{app.experience_summary}</p>
                             </div>
 
+                            {/* Status */}
                             <div className="space-y-1.5">
                               <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Estado del proceso</label>
                               <Select value={app.status} onValueChange={(v) => handleStatusSelect(app.id, v as ApplicationStatus)}>
@@ -325,6 +348,7 @@ export default function AdminOpeningApplications() {
                               </Select>
                             </div>
 
+                            {/* History */}
                             {history.length > 0 && (
                               <div className="space-y-1.5">
                                 <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1">
@@ -332,16 +356,37 @@ export default function AdminOpeningApplications() {
                                 </label>
                                 <div className="space-y-1">
                                   {history.map((h, i) => (
-                                    <div key={i} className="flex items-center gap-2 text-xs text-foreground/80">
-                                      <span className="text-muted-foreground w-20 shrink-0">{new Date(h.date).toLocaleDateString("es-AR")}</span>
-                                      <Badge className={`${STATUS_COLORS[h.status]} text-xs`}>{STATUS_LABELS[h.status]}</Badge>
-                                      {h.note && <span className="text-muted-foreground italic">{h.note}</span>}
+                                    <div key={i} className="flex items-center gap-2 text-xs text-foreground/80 group">
+                                      {editingHistoryApp === app.id && editingHistoryIdx === i ? (
+                                        <>
+                                          <Input type="date" value={editHistoryDate} onChange={e => setEditHistoryDate(e.target.value)} className="h-7 text-xs w-32" />
+                                          <Badge className={`${STATUS_COLORS[h.status]} text-xs`}>{STATUS_LABELS[h.status]}</Badge>
+                                          {h.note && <span className="text-muted-foreground italic">{h.note}</span>}
+                                          <button onClick={() => saveHistoryEdit(app.id, i)} className="text-emerald-600 hover:text-emerald-700 ml-1 text-xs font-semibold">Guardar</button>
+                                          <button onClick={() => { setEditingHistoryApp(null); setEditingHistoryIdx(null); }} className="text-muted-foreground hover:text-foreground text-xs">Cancelar</button>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <span className="text-muted-foreground w-20 shrink-0">{new Date(h.date).toLocaleDateString("es-AR")}</span>
+                                          <Badge className={`${STATUS_COLORS[h.status]} text-xs`}>{STATUS_LABELS[h.status]}</Badge>
+                                          {h.note && <span className="text-muted-foreground italic">{h.note}</span>}
+                                          <div className="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onClick={() => { setEditingHistoryApp(app.id); setEditingHistoryIdx(i); setEditHistoryDate(h.date); }} className="text-muted-foreground hover:text-foreground p-0.5 rounded">
+                                              <Pencil className="h-3 w-3" />
+                                            </button>
+                                            <button onClick={() => deleteHistoryEntry(app.id, i)} className="text-muted-foreground hover:text-destructive p-0.5 rounded">
+                                              <Trash2 className="h-3 w-3" />
+                                            </button>
+                                          </div>
+                                        </>
+                                      )}
                                     </div>
                                   ))}
                                 </div>
                               </div>
                             )}
 
+                            {/* Comments */}
                             <div className="space-y-1.5">
                               <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Comentarios internos</label>
                               <Textarea defaultValue={app.comments || ""} onBlur={(e) => handleCommentsBlur(app.id, e.target.value)} placeholder="Notas internas sobre el candidato..." rows={3} className="text-sm" />
@@ -362,6 +407,7 @@ export default function AdminOpeningApplications() {
         );
       })}
 
+      {/* Status dialog */}
       <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
