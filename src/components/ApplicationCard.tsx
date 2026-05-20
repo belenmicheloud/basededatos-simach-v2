@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { JobApplication, ApplicationStatus, STATUS_LABELS, STATUS_COLORS, ACTIVE_STATUSES, DISCARD_REASONS, StatusHistoryEntry } from "@/lib/types";
 import {
   Download, Mail, Phone, MapPin, Briefcase, Building2, Calendar, Clock,
-  ChevronDown, ChevronUp, CalendarCheck, Send, Trash2, IdCard, History,
+  ChevronDown, ChevronUp, CalendarCheck, Send, Trash2, IdCard, History, Pencil,
 } from "lucide-react";
 
 type ActiveOpening = { id: string; position: string; area: string; branch: string };
@@ -40,6 +40,8 @@ export default function ApplicationCard({ app, onUpdate }: Props) {
   const [pendingDate, setPendingDate] = useState<string>("");
   const [pendingDiscard, setPendingDiscard] = useState<string>("");
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [editingHistory, setEditingHistory] = useState<number | null>(null);
+  const [editHistoryDate, setEditHistoryDate] = useState<string>("");
 
   const cuil = (app as any).cuil || "--";
   const history: StatusHistoryEntry[] = (app as any).status_history || [];
@@ -78,6 +80,21 @@ export default function ApplicationCard({ app, onUpdate }: Props) {
     toast({ title: "Estado actualizado" });
     setStatusDialogOpen(false);
     setPendingStatus(null);
+  };
+
+  const saveHistoryEdit = async (index: number) => {
+    const newHistory = history.map((h, i) => i === index ? { ...h, date: editHistoryDate } : h);
+    await persist({ status_history: newHistory as any });
+    setEditingHistory(null);
+    toast({ title: "Historial actualizado" });
+  };
+
+  const deleteHistoryEntry = async (index: number) => {
+    const confirmed = window.confirm("Eliminar esta entrada del historial?");
+    if (!confirmed) return;
+    const newHistory = history.filter((_, i) => i !== index);
+    await persist({ status_history: newHistory as any });
+    toast({ title: "Entrada eliminada" });
   };
 
   const handleCommentsBlur = async (value: string) => {
@@ -182,10 +199,35 @@ export default function ApplicationCard({ app, onUpdate }: Props) {
               </label>
               <div className="space-y-1">
                 {history.map((h, i) => (
-                  <div key={i} className="flex items-center gap-2 text-xs text-foreground/80">
-                    <span className="text-muted-foreground w-20 shrink-0">{new Date(h.date).toLocaleDateString("es-AR")}</span>
-                    <Badge className={`${STATUS_COLORS[h.status]} text-xs`}>{STATUS_LABELS[h.status]}</Badge>
-                    {h.note && <span className="text-muted-foreground italic">{h.note}</span>}
+                  <div key={i} className="flex items-center gap-2 text-xs text-foreground/80 group">
+                    {editingHistory === i ? (
+                      <>
+                        <Input
+                          type="date"
+                          value={editHistoryDate}
+                          onChange={e => setEditHistoryDate(e.target.value)}
+                          className="h-7 text-xs w-32"
+                        />
+                        <Badge className={`${STATUS_COLORS[h.status]} text-xs`}>{STATUS_LABELS[h.status]}</Badge>
+                        {h.note && <span className="text-muted-foreground italic text-xs">{h.note}</span>}
+                        <button onClick={() => saveHistoryEdit(i)} className="text-emerald-600 hover:text-emerald-700 ml-1 text-xs font-semibold">Guardar</button>
+                        <button onClick={() => setEditingHistory(null)} className="text-muted-foreground hover:text-foreground text-xs">Cancelar</button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-muted-foreground w-20 shrink-0">{new Date(h.date).toLocaleDateString("es-AR")}</span>
+                        <Badge className={`${STATUS_COLORS[h.status]} text-xs`}>{STATUS_LABELS[h.status]}</Badge>
+                        {h.note && <span className="text-muted-foreground italic">{h.note}</span>}
+                        <div className="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => { setEditingHistory(i); setEditHistoryDate(h.date); }} className="text-muted-foreground hover:text-foreground p-0.5 rounded">
+                            <Pencil className="h-3 w-3" />
+                          </button>
+                          <button onClick={() => deleteHistoryEntry(i)} className="text-muted-foreground hover:text-destructive p-0.5 rounded">
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
