@@ -52,7 +52,6 @@ export default function AdminOpeningApplications() {
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
 
-  // Status change dialog
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [pendingStatus, setPendingStatus] = useState<ApplicationStatus | null>(null);
   const [pendingDate, setPendingDate] = useState<string>("");
@@ -314,7 +313,6 @@ export default function AdminOpeningApplications() {
                               <p className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">{app.experience_summary}</p>
                             </div>
 
-                            {/* Status */}
                             <div className="space-y-1.5">
                               <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Estado del proceso</label>
                               <Select value={app.status} onValueChange={(v) => handleStatusSelect(app.id, v as ApplicationStatus)}>
@@ -327,7 +325,6 @@ export default function AdminOpeningApplications() {
                               </Select>
                             </div>
 
-                            {/* History */}
                             {history.length > 0 && (
                               <div className="space-y-1.5">
                                 <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1">
@@ -345,7 +342,6 @@ export default function AdminOpeningApplications() {
                               </div>
                             )}
 
-                            {/* Comments */}
                             <div className="space-y-1.5">
                               <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Comentarios internos</label>
                               <Textarea defaultValue={app.comments || ""} onBlur={(e) => handleCommentsBlur(app.id, e.target.value)} placeholder="Notas internas sobre el candidato..." rows={3} className="text-sm" />
@@ -366,7 +362,6 @@ export default function AdminOpeningApplications() {
         );
       })}
 
-      {/* Status dialog */}
       <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
