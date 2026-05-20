@@ -30,7 +30,7 @@ type AppWithExtra = JobApplication & {
   discard_reason?: string | null;
 };
 
-const STATUS_NEEDS_DATE = ["contactado", "entrevistado", "contratado"];
+const STATUS_NEEDS_DATE = ["contactado", "entrevistado", "contratado", "descartado"];
 const STATUS_DATE_LABEL: Record<string, string> = {
   contactado: "Fecha de contacto",
   entrevistado: "Fecha de entrevista",
