@@ -1,11 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { JobApplication } from "@/lib/types";
+import { JobApplication, STATUS_LABELS, StatusHistoryEntry } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid,
-} from "recharts";
-import { Calendar, Clock, Users, UserCheck, UserX, ChevronDown, ChevronUp, TrendingUp } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from "recharts";
+import { Calendar, Clock, Users, UserCheck, ChevronDown, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 type Opening = {
@@ -18,7 +16,11 @@ type Opening = {
   start_date?: string | null;
 };
 
-type AppRow = JobApplication & { opening_id?: string | null };
+type AppRow = JobApplication & {
+  opening_id?: string | null;
+  status_history?: StatusHistoryEntry[];
+  discard_reason?: string | null;
+};
 
 type FunnelRow = {
   opening: Opening;
@@ -28,16 +30,15 @@ type FunnelRow = {
   enRevision: number;
   entrevistados: number;
   contratados: number;
-  rechazados: number;
   descartados: number;
   nuevos: number;
-  conversionRate: number;     // % contratados / total
-  entrevistaRate: number;     // % entrevistados / total
-  diasHastaContratacion: number | null;
-  diasBusqueda: number;       // desde created_at hasta hoy (o hasta hired_at del contratado)
+  conversionRate: number;
+  entrevistaRate: number;
+  diasTotales: number | null;
+  stageTimeline: { label: string; date: string; dias: number | null }[];
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-popover border border-border rounded-lg px-3 py-2 text-sm shadow-lg">
@@ -49,17 +50,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       ))}
     </div>
   );
-};
+}
 
 function FunnelBar({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0;
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 bg-muted rounded-full h-2">
-        <div
-          className="h-2 rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, background: color }}
-        />
+        <div className="h-2 rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: color }} />
       </div>
       <span className="text-xs font-semibold tabular-nums w-6 text-right" style={{ color }}>{value}</span>
     </div>
@@ -70,7 +68,6 @@ function FunnelCard({ row, expanded, onToggle }: { row: FunnelRow; expanded: boo
   const chartData = [
     { name: "Total", value: row.total, fill: "#3b82f6" },
     { name: "Contactados", value: row.contactados, fill: "#06b6d4" },
-    { name: "En revisión", value: row.enRevision, fill: "#f59e0b" },
     { name: "Entrevistados", value: row.entrevistados, fill: "#8b5cf6" },
     { name: "Contratados", value: row.contratados, fill: "#22c55e" },
   ];
@@ -79,11 +76,7 @@ function FunnelCard({ row, expanded, onToggle }: { row: FunnelRow; expanded: boo
 
   return (
     <div className="bg-card border rounded-xl overflow-hidden">
-      {/* Header */}
-      <div
-        className="p-4 flex flex-col md:flex-row md:items-center gap-3 cursor-pointer hover:bg-muted/30 transition-colors"
-        onClick={onToggle}
-      >
+      <div className="p-4 flex flex-col md:flex-row md:items-center gap-3 cursor-pointer hover:bg-muted/30 transition-colors" onClick={onToggle}>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
             <h3 className="font-semibold text-foreground">{row.opening.position}</h3>
@@ -95,106 +88,83 @@ function FunnelCard({ row, expanded, onToggle }: { row: FunnelRow; expanded: boo
             }
           </div>
           <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-            <span className="flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              Inicio: {new Date(fechaInicio).toLocaleDateString("es-AR")}
-            </span>
-            <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {row.diasBusqueda} días activa
-            </span>
-            {row.diasHastaContratacion !== null && (
+            <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />Inicio: {new Date(fechaInicio).toLocaleDateString("es-AR")}</span>
+            {row.diasTotales !== null && (
               <span className="flex items-center gap-1 text-emerald-600 font-medium">
-                <UserCheck className="h-3 w-3" />
-                Contratado en {row.diasHastaContratacion}d
+                <Clock className="h-3 w-3" />{row.diasTotales} dias hasta contratacion
               </span>
             )}
           </div>
         </div>
 
-        {/* Mini KPIs */}
         <div className="flex items-center gap-3 shrink-0">
+          <div className="text-center"><p className="text-lg font-bold text-foreground leading-none">{row.total}</p><p className="text-[10px] text-muted-foreground">postulados</p></div>
+          <div className="text-center"><p className="text-lg font-bold text-violet-600 leading-none">{row.entrevistados}</p><p className="text-[10px] text-muted-foreground">entrevistados</p></div>
+          <div className="text-center"><p className="text-lg font-bold text-emerald-600 leading-none">{row.contratados}</p><p className="text-[10px] text-muted-foreground">contratados</p></div>
           <div className="text-center">
-            <p className="text-lg font-bold text-foreground leading-none">{row.total}</p>
-            <p className="text-[10px] text-muted-foreground">postulados</p>
-          </div>
-          <div className="text-center">
-            <p className="text-lg font-bold text-violet-600 leading-none">{row.entrevistados}</p>
-            <p className="text-[10px] text-muted-foreground">entrevistados</p>
-          </div>
-          <div className="text-center">
-            <p className="text-lg font-bold text-emerald-600 leading-none">{row.contratados}</p>
-            <p className="text-[10px] text-muted-foreground">contratados</p>
-          </div>
-          <div className="text-center">
-            <p className="text-lg font-bold leading-none" style={{
-              color: row.conversionRate >= 10 ? "#22c55e" : row.conversionRate >= 3 ? "#f59e0b" : "#6b7280"
-            }}>
+            <p className="text-lg font-bold leading-none" style={{ color: row.conversionRate >= 10 ? "#22c55e" : row.conversionRate >= 3 ? "#f59e0b" : "#6b7280" }}>
               {row.conversionRate}%
             </p>
-            <p className="text-[10px] text-muted-foreground">conversión</p>
+            <p className="text-[10px] text-muted-foreground">conversion</p>
           </div>
-          <div className="text-muted-foreground ml-2">
-            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </div>
+          <div className="text-muted-foreground ml-2">{expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}</div>
         </div>
       </div>
 
-      {/* Expanded detail */}
       {expanded && (
         <div className="border-t bg-muted/10 p-4 grid md:grid-cols-2 gap-6">
-          {/* Funnel bars */}
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Embudo de conversión</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Embudo de conversion</p>
             <div className="space-y-2">
               <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-muted-foreground">Total postulados</span>
-                  <span className="font-semibold">100%</span>
-                </div>
+                <div className="flex justify-between text-xs mb-1"><span className="text-muted-foreground">Total postulados</span><span className="font-semibold">100%</span></div>
                 <FunnelBar value={row.total} max={row.total} color="#3b82f6" />
               </div>
               <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-muted-foreground">Contactados</span>
-                  <span className="font-semibold">{row.total > 0 ? Math.round(row.contactados/row.total*100) : 0}%</span>
-                </div>
+                <div className="flex justify-between text-xs mb-1"><span className="text-muted-foreground">Contactados</span><span className="font-semibold">{row.total > 0 ? Math.round(row.contactados/row.total*100) : 0}%</span></div>
                 <FunnelBar value={row.contactados} max={row.total} color="#06b6d4" />
               </div>
               <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-muted-foreground">En revisión</span>
-                  <span className="font-semibold">{row.total > 0 ? Math.round(row.enRevision/row.total*100) : 0}%</span>
-                </div>
-                <FunnelBar value={row.enRevision} max={row.total} color="#f59e0b" />
-              </div>
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-muted-foreground">Entrevistados</span>
-                  <span className="font-semibold">{row.entrevistaRate}%</span>
-                </div>
+                <div className="flex justify-between text-xs mb-1"><span className="text-muted-foreground">Entrevistados</span><span className="font-semibold">{row.entrevistaRate}%</span></div>
                 <FunnelBar value={row.entrevistados} max={row.total} color="#8b5cf6" />
               </div>
               <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-muted-foreground">Contratados</span>
-                  <span className="font-semibold text-emerald-600">{row.conversionRate}%</span>
-                </div>
+                <div className="flex justify-between text-xs mb-1"><span className="text-muted-foreground">Contratados</span><span className="font-semibold text-emerald-600">{row.conversionRate}%</span></div>
                 <FunnelBar value={row.contratados} max={row.total} color="#22c55e" />
               </div>
               <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-muted-foreground">Descartados/Rechazados</span>
-                  <span className="font-semibold text-destructive">{row.total > 0 ? Math.round((row.descartados+row.rechazados)/row.total*100) : 0}%</span>
-                </div>
-                <FunnelBar value={row.descartados + row.rechazados} max={row.total} color="#ef4444" />
+                <div className="flex justify-between text-xs mb-1"><span className="text-muted-foreground">Descartados</span><span className="font-semibold text-destructive">{row.total > 0 ? Math.round(row.descartados/row.total*100) : 0}%</span></div>
+                <FunnelBar value={row.descartados} max={row.total} color="#ef4444" />
               </div>
             </div>
+
+            {/* Timeline de etapas del contratado */}
+            {row.stageTimeline.length > 0 && (
+              <div className="mt-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Timeline del candidato contratado</p>
+                <div className="space-y-1.5">
+                  {row.stageTimeline.map((s, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs">
+                      <span className="text-muted-foreground w-24 shrink-0">{s.date}</span>
+                      <span className="font-medium text-foreground">{s.label}</span>
+                      {s.dias !== null && (
+                        <span className="text-muted-foreground ml-auto">{s.dias > 0 ? `+${s.dias}d` : "mismo dia"}</span>
+                      )}
+                    </div>
+                  ))}
+                  {row.diasTotales !== null && (
+                    <div className="flex items-center gap-2 text-xs font-semibold border-t pt-1.5 mt-1">
+                      <span className="text-muted-foreground w-24 shrink-0">Total</span>
+                      <span className="text-emerald-600">{row.diasTotales} dias desde inicio de busqueda</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Bar chart */}
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Distribución visual</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Distribucion visual</p>
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
@@ -207,17 +177,14 @@ function FunnelCard({ row, expanded, onToggle }: { row: FunnelRow; expanded: boo
               </BarChart>
             </ResponsiveContainer>
 
-            {/* Extra stats */}
             <div className="mt-3 grid grid-cols-2 gap-2">
               <div className="bg-muted/40 rounded-lg p-2 text-center">
                 <p className="text-xs text-muted-foreground">Nuevos sin gestionar</p>
                 <p className="text-base font-bold text-foreground">{row.nuevos}</p>
               </div>
               <div className="bg-muted/40 rounded-lg p-2 text-center">
-                <p className="text-xs text-muted-foreground">Días hasta contrat.</p>
-                <p className="text-base font-bold text-foreground">
-                  {row.diasHastaContratacion !== null ? `${row.diasHastaContratacion}d` : "--"}
-                </p>
+                <p className="text-xs text-muted-foreground">Dias hasta contrat.</p>
+                <p className="text-base font-bold text-foreground">{row.diasTotales !== null ? `${row.diasTotales}d` : "--"}</p>
               </div>
             </div>
           </div>
@@ -252,90 +219,80 @@ export default function AdminFunnelReport() {
       const oApps = apps.filter(a => a.opening_id === opening.id);
       const total = oApps.length;
 
-      const count = (status: string) => oApps.filter(a => a.status === status).length;
+      const count = (status: string) => oApps.filter(a => a.status === status || (status === "descartado" && a.status === "rechazado")).length;
 
       const contratados = count("contratado");
       const entrevistados = count("entrevistado");
       const contactados = count("contactado");
       const enRevision = count("en_revision");
-      const rechazados = count("rechazado");
       const descartados = count("descartado");
       const nuevos = count("nuevo");
 
       const conversionRate = total > 0 ? Math.round((contratados / total) * 100) : 0;
       const entrevistaRate = total > 0 ? Math.round((entrevistados / total) * 100) : 0;
 
-      // Days from start to today (or to hired_at)
+      // Timeline from start_date to hired_at using status_history of the hired candidate
       const fechaInicio = opening.start_date || opening.created_at;
       const hiredApp = oApps.find(a => a.status === "contratado" && a.hired_at);
-      const endDate = hiredApp?.hired_at ? new Date(hiredApp.hired_at) : new Date();
-      const diasBusqueda = Math.max(0, Math.round((endDate.getTime() - new Date(fechaInicio).getTime()) / 86400000));
 
-      const diasHastaContratacion = hiredApp?.hired_at
-        ? Math.round((new Date(hiredApp.hired_at).getTime() - new Date(fechaInicio).getTime()) / 86400000)
-        : null;
+      let diasTotales: number | null = null;
+      let stageTimeline: { label: string; date: string; dias: number | null }[] = [];
+
+      if (hiredApp?.hired_at) {
+        diasTotales = Math.round(
+          (new Date(hiredApp.hired_at).getTime() - new Date(fechaInicio).getTime()) / 86400000
+        );
+
+        // Build timeline from status_history
+        const history: StatusHistoryEntry[] = (hiredApp.status_history as any) || [];
+        const startDate = new Date(fechaInicio);
+
+        stageTimeline = [
+          { label: "Inicio de busqueda", date: new Date(fechaInicio).toLocaleDateString("es-AR"), dias: null },
+          ...history.map((h, i) => {
+            const prevDate = i === 0 ? startDate : new Date(history[i - 1].date);
+            const currDate = new Date(h.date);
+            const dias = Math.round((currDate.getTime() - prevDate.getTime()) / 86400000);
+            return {
+              label: STATUS_LABELS[h.status] || h.status,
+              date: new Date(h.date).toLocaleDateString("es-AR"),
+              dias,
+            };
+          }),
+        ];
+      }
 
       return {
         opening, apps: oApps, total,
         contactados, enRevision, entrevistados, contratados,
-        rechazados, descartados, nuevos,
+        descartados, nuevos,
         conversionRate, entrevistaRate,
-        diasHastaContratacion, diasBusqueda,
+        diasTotales, stageTimeline,
       };
     });
   }, [openings, apps]);
 
   const toggle = (id: string) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
 
-  if (loading) {
-    return <div className="text-center py-16 text-muted-foreground">Cargando reporte...</div>;
-  }
+  if (loading) return <div className="text-center py-16 text-muted-foreground">Cargando reporte...</div>;
+  if (rows.length === 0) return <div className="text-center py-16 text-muted-foreground">No hay busquedas creadas todavia.</div>;
 
-  if (rows.length === 0) {
-    return <div className="text-center py-16 text-muted-foreground">No hay búsquedas creadas todavía.</div>;
-  }
-
-  // Summary KPIs across all openings
   const totalPostulados = rows.reduce((s, r) => s + r.total, 0);
   const totalContratados = rows.reduce((s, r) => s + r.contratados, 0);
-  const avgConversion = rows.length > 0
-    ? Math.round(rows.reduce((s, r) => s + r.conversionRate, 0) / rows.length)
-    : 0;
-  const avgDiasBusqueda = rows.length > 0
-    ? Math.round(rows.reduce((s, r) => s + r.diasBusqueda, 0) / rows.length)
-    : 0;
+  const avgConversion = rows.length > 0 ? Math.round(rows.reduce((s, r) => s + r.conversionRate, 0) / rows.length) : 0;
 
   return (
     <div className="space-y-5">
-      {/* Global summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-card border rounded-xl p-3 text-center">
-          <p className="text-2xl font-bold text-foreground">{rows.length}</p>
-          <p className="text-xs text-muted-foreground">Búsquedas totales</p>
-        </div>
-        <div className="bg-card border rounded-xl p-3 text-center">
-          <p className="text-2xl font-bold text-blue-600">{totalPostulados}</p>
-          <p className="text-xs text-muted-foreground">Postulados totales</p>
-        </div>
-        <div className="bg-card border rounded-xl p-3 text-center">
-          <p className="text-2xl font-bold text-emerald-600">{totalContratados}</p>
-          <p className="text-xs text-muted-foreground">Contratados totales</p>
-        </div>
-        <div className="bg-card border rounded-xl p-3 text-center">
-          <p className="text-2xl font-bold text-violet-600">{avgConversion}%</p>
-          <p className="text-xs text-muted-foreground">Conv. promedio</p>
-        </div>
+        <div className="bg-card border rounded-xl p-3 text-center"><p className="text-2xl font-bold text-foreground">{rows.length}</p><p className="text-xs text-muted-foreground">Busquedas totales</p></div>
+        <div className="bg-card border rounded-xl p-3 text-center"><p className="text-2xl font-bold text-blue-600">{totalPostulados}</p><p className="text-xs text-muted-foreground">Postulados totales</p></div>
+        <div className="bg-card border rounded-xl p-3 text-center"><p className="text-2xl font-bold text-emerald-600">{totalContratados}</p><p className="text-xs text-muted-foreground">Contratados totales</p></div>
+        <div className="bg-card border rounded-xl p-3 text-center"><p className="text-2xl font-bold text-violet-600">{avgConversion}%</p><p className="text-xs text-muted-foreground">Conv. promedio</p></div>
       </div>
 
-      {/* Per-opening funnels */}
       <div className="space-y-3">
         {rows.map(row => (
-          <FunnelCard
-            key={row.opening.id}
-            row={row}
-            expanded={!!expanded[row.opening.id]}
-            onToggle={() => toggle(row.opening.id)}
-          />
+          <FunnelCard key={row.opening.id} row={row} expanded={!!expanded[row.opening.id]} onToggle={() => toggle(row.opening.id)} />
         ))}
       </div>
     </div>
