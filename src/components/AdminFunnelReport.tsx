@@ -22,6 +22,14 @@ type AppRow = JobApplication & {
   discard_reason?: string | null;
 };
 
+type StageTimeline = { label: string; date: string; dias: number | null };
+
+type HiredTimeline = {
+  name: string;
+  diasTotales: number | null;
+  stages: StageTimeline[];
+};
+
 type FunnelRow = {
   opening: Opening;
   apps: AppRow[];
@@ -35,7 +43,8 @@ type FunnelRow = {
   conversionRate: number;
   entrevistaRate: number;
   diasTotales: number | null;
-  stageTimeline: { label: string; date: string; dias: number | null }[];
+  stageTimeline: StageTimeline[];
+  hiredTimelines: HiredTimeline[];
 };
 
 function CustomTooltip({ active, payload, label }: any) {
@@ -138,27 +147,36 @@ function FunnelCard({ row, expanded, onToggle }: { row: FunnelRow; expanded: boo
               </div>
             </div>
 
-            {/* Timeline de etapas del contratado */}
-            {row.stageTimeline.length > 0 && (
-              <div className="mt-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Timeline del candidato contratado</p>
-                <div className="space-y-1.5">
-                  {row.stageTimeline.map((s, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs">
-                      <span className="text-muted-foreground w-24 shrink-0">{s.date}</span>
-                      <span className="font-medium text-foreground">{s.label}</span>
-                      {s.dias !== null && (
-                        <span className="text-muted-foreground ml-auto">{s.dias > 0 ? `+${s.dias}d` : "mismo dia"}</span>
+            {/* Timeline de etapas - uno por cada contratado */}
+            {row.hiredTimelines.length > 0 && (
+              <div className="mt-4 space-y-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Timeline {row.hiredTimelines.length > 1 ? `(${row.hiredTimelines.length} contratados)` : "del candidato contratado"}
+                </p>
+                {row.hiredTimelines.map((ht, ti) => (
+                  <div key={ti}>
+                    {row.hiredTimelines.length > 1 && (
+                      <p className="text-xs font-medium text-foreground mb-1">{ht.name}</p>
+                    )}
+                    <div className="space-y-1.5">
+                      {ht.stages.map((s, i) => (
+                        <div key={i} className="flex items-center gap-2 text-xs">
+                          <span className="text-muted-foreground w-24 shrink-0">{s.date}</span>
+                          <span className="font-medium text-foreground">{s.label}</span>
+                          {s.dias !== null && (
+                            <span className="text-muted-foreground ml-auto">{s.dias > 0 ? `+${s.dias}d` : "mismo dia"}</span>
+                          )}
+                        </div>
+                      ))}
+                      {ht.diasTotales !== null && (
+                        <div className="flex items-center gap-2 text-xs font-semibold border-t pt-1.5 mt-1">
+                          <span className="text-muted-foreground w-24 shrink-0">Total</span>
+                          <span className="text-emerald-600">{ht.diasTotales} dias desde inicio de busqueda</span>
+                        </div>
                       )}
                     </div>
-                  ))}
-                  {row.diasTotales !== null && (
-                    <div className="flex items-center gap-2 text-xs font-semibold border-t pt-1.5 mt-1">
-                      <span className="text-muted-foreground w-24 shrink-0">Total</span>
-                      <span className="text-emerald-600">{row.diasTotales} dias desde inicio de busqueda</span>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -244,39 +262,37 @@ export default function AdminFunnelReport() {
       const fechaInicio = opening.start_date || opening.created_at;
       const hiredApp = oApps.find(a => a.status === "contratado" && a.hired_at);
 
-      let diasTotales: number | null = null;
-      let stageTimeline: { label: string; date: string; dias: number | null }[] = [];
-
-      if (hiredApp?.hired_at) {
-        diasTotales = Math.round(
-          (new Date(hiredApp.hired_at).getTime() - new Date(fechaInicio).getTime()) / 86400000
+      // Build timeline for ALL hired candidates
+      const hiredApps = oApps.filter(a => a.status === "contratado" && a.hired_at);
+      
+      const hiredTimelines: HiredTimeline[] = hiredApps.map(hApp => {
+        const dias = Math.round(
+          (new Date(hApp.hired_at!).getTime() - new Date(fechaInicio).getTime()) / 86400000
         );
-
-        // Build timeline from status_history
-        const history: StatusHistoryEntry[] = (hiredApp.status_history as any) || [];
+        const history: StatusHistoryEntry[] = (hApp.status_history as any) || [];
         const startDate = new Date(fechaInicio);
-
-        stageTimeline = [
+        const stages: StageTimeline[] = [
           { label: "Inicio de busqueda", date: new Date(fechaInicio).toLocaleDateString("es-AR"), dias: null },
           ...history.map((h, i) => {
             const prevDate = i === 0 ? startDate : new Date(history[i - 1].date);
             const currDate = new Date(h.date);
-            const dias = Math.round((currDate.getTime() - prevDate.getTime()) / 86400000);
-            return {
-              label: STATUS_LABELS[h.status] || h.status,
-              date: new Date(h.date).toLocaleDateString("es-AR"),
-              dias,
-            };
+            const d = Math.round((currDate.getTime() - prevDate.getTime()) / 86400000);
+            return { label: STATUS_LABELS[h.status] || h.status, date: new Date(h.date).toLocaleDateString("es-AR"), dias: d };
           }),
         ];
-      }
+        return { name: hApp.full_name, diasTotales: dias, stages };
+      });
+
+      // Keep backward compat
+      const diasTotales = hiredTimelines.length > 0 ? hiredTimelines[0].diasTotales : null;
+      const stageTimeline = hiredTimelines.length > 0 ? hiredTimelines[0].stages : [];
 
       return {
         opening, apps: oApps, total,
         contactados, enRevision, entrevistados, contratados,
         descartados, nuevos,
         conversionRate, entrevistaRate,
-        diasTotales, stageTimeline,
+        diasTotales, stageTimeline, hiredTimelines,
       };
     });
   }, [openings, apps]);
