@@ -34,7 +34,6 @@ export const STATUS_COLORS: Record<ApplicationStatus, string> = {
 export const ACTIVE_STATUSES: { value: ApplicationStatus; label: string }[] = [
   { value: "nuevo", label: "Nuevo" },
   { value: "contactado", label: "Contactado" },
-  { value: "en_revision", label: "En revision" },
   { value: "entrevistado", label: "Entrevistado" },
   { value: "contratado", label: "Contratado" },
   { value: "descartado", label: "Descartado" },
