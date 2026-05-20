@@ -25,7 +25,6 @@ export const STATUS_LABELS: Record<ApplicationStatus, string> = {
 export const STATUS_COLORS: Record<ApplicationStatus, string> = {
   nuevo: "bg-info text-info-foreground",
   contactado: "bg-info text-info-foreground",
-  en_revision: "bg-warning text-warning-foreground",
   entrevistado: "bg-primary text-primary-foreground",
   contratado: "bg-success text-success-foreground",
   rechazado: "bg-destructive text-destructive-foreground",
