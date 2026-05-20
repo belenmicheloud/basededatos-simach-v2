@@ -6,12 +6,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { JobApplication, STATUS_LABELS, POSITIONS } from "@/lib/types";
-import { Search, ArrowLeft, FileDown, Calendar } from "lucide-react";
+import { Search, ArrowLeft, FileDown, Calendar, LayoutDashboard, TrendingUp, UserPlus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminOpenings from "@/components/AdminOpenings";
 import AdminOpeningApplications from "@/components/AdminOpeningApplications";
 import ApplicationCard from "@/components/ApplicationCard";
+import AdminDashboard from "@/components/AdminDashboard";
+import AdminFunnelReport from "@/components/AdminFunnelReport";
+import AdminManualUpload from "@/components/AdminManualUpload";
 
 export default function Admin() {
   const { toast } = useToast();
@@ -59,7 +62,7 @@ export default function Admin() {
   }, [applications, search, filterStatus, filterPosition, filterCity, filterDateFrom, filterDateTo]);
 
   const exportCSV = () => {
-    const headers = ["Nombre", "Email", "Teléfono", "Ciudad", "Puesto", "Área", "Años de experiencia", "Estado", "Fecha", "Etiquetas", "Fecha contratación", "Comentarios"];
+    const headers = ["Nombre", "Email", "Telefono", "Ciudad", "Puesto", "Area", "Anos de experiencia", "Estado", "Fecha", "Etiquetas", "Fecha contratacion", "Comentarios"];
     const rows = filtered.map(a => [
       a.full_name, a.email, a.phone, a.city, a.position, a.area, a.years_experience || "",
       STATUS_LABELS[a.status], new Date(a.created_at).toLocaleDateString("es-AR"),
@@ -97,76 +100,97 @@ export default function Admin() {
 
       <div className="container mx-auto px-4 py-6 space-y-6">
         <Tabs defaultValue="applications" className="space-y-6">
-          <TabsList>
+          <TabsList className="flex-wrap h-auto gap-1">
             <TabsTrigger value="applications">Postulaciones generales</TabsTrigger>
-            <TabsTrigger value="by-opening">Postulaciones por búsqueda</TabsTrigger>
-            <TabsTrigger value="openings">Búsquedas activas</TabsTrigger>
+            <TabsTrigger value="by-opening">Por busqueda</TabsTrigger>
+            <TabsTrigger value="openings">Busquedas activas</TabsTrigger>
+            <TabsTrigger value="upload" className="gap-1.5">
+              <UserPlus className="h-3.5 w-3.5" /> Carga manual
+            </TabsTrigger>
+            <TabsTrigger value="dashboard" className="gap-1.5">
+              <LayoutDashboard className="h-3.5 w-3.5" /> Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="funnel" className="gap-1.5">
+              <TrendingUp className="h-3.5 w-3.5" /> Conversion por busqueda
+            </TabsTrigger>
           </TabsList>
+
           <TabsContent value="applications" className="space-y-6">
-        {/* Filters */}
-        <div className="bg-card rounded-xl border p-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-          <div className="relative lg:col-span-2">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar por nombre..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
-          </div>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los estados</SelectItem>
-              {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={filterPosition} onValueChange={setFilterPosition}>
-            <SelectTrigger><SelectValue placeholder="Puesto" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los puestos</SelectItem>
-              {POSITIONS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={filterCity} onValueChange={setFilterCity}>
-            <SelectTrigger><SelectValue placeholder="Ciudad" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas las ciudades</SelectItem>
-              {cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <div className="flex gap-2 items-center">
-            <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
-            <Input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)} className="text-sm" />
-            <span className="text-muted-foreground text-sm">a</span>
-            <Input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)} className="text-sm" />
-          </div>
-        </div>
+            <div className="bg-card rounded-xl border p-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+              <div className="relative lg:col-span-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Buscar por nombre..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+              </div>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los estados</SelectItem>
+                  {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={filterPosition} onValueChange={setFilterPosition}>
+                <SelectTrigger><SelectValue placeholder="Puesto" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los puestos</SelectItem>
+                  {POSITIONS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={filterCity} onValueChange={setFilterCity}>
+                <SelectTrigger><SelectValue placeholder="Ciudad" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las ciudades</SelectItem>
+                  {cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <div className="flex gap-2 items-center">
+                <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+                <Input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)} className="text-sm" />
+                <span className="text-muted-foreground text-sm">a</span>
+                <Input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)} className="text-sm" />
+              </div>
+            </div>
 
-        {/* Stats */}
-        <div className="flex gap-2 flex-wrap text-sm">
-          <span className="text-muted-foreground">{filtered.length} postulaciones</span>
-          {filterStatus === "all" && Object.entries(STATUS_LABELS).map(([k, v]) => {
-            const count = applications.filter(a => a.status === k).length;
-            return count > 0 ? (
-              <Badge key={k} variant="outline" className="text-xs">{v}: {count}</Badge>
-            ) : null;
-          })}
-        </div>
+            <div className="flex gap-2 flex-wrap text-sm">
+              <span className="text-muted-foreground">{filtered.length} postulaciones</span>
+              {filterStatus === "all" && Object.entries(STATUS_LABELS).map(([k, v]) => {
+                const count = applications.filter(a => a.status === k).length;
+                return count > 0 ? (
+                  <Badge key={k} variant="outline" className="text-xs">{v}: {count}</Badge>
+                ) : null;
+              })}
+            </div>
 
-        {/* Cards */}
-        {loading ? (
-          <div className="text-center py-12 text-muted-foreground">Cargando...</div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">No hay postulaciones que mostrar.</div>
-        ) : (
-          <div className="grid gap-3">
-            {filtered.map(app => (
-              <ApplicationCard key={app.id} app={app} onUpdate={updateApp} />
-            ))}
-          </div>
-        )}
+            {loading ? (
+              <div className="text-center py-12 text-muted-foreground">Cargando...</div>
+            ) : filtered.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">No hay postulaciones que mostrar.</div>
+            ) : (
+              <div className="grid gap-3">
+                {filtered.map(app => (
+                  <ApplicationCard key={app.id} app={app} onUpdate={updateApp} />
+                ))}
+              </div>
+            )}
           </TabsContent>
+
           <TabsContent value="by-opening">
             <AdminOpeningApplications />
           </TabsContent>
+
           <TabsContent value="openings">
             <AdminOpenings />
+          </TabsContent>
+
+          <TabsContent value="upload">
+            <AdminManualUpload />
+          </TabsContent>
+
+          <TabsContent value="dashboard">
+            <AdminDashboard />
+          </TabsContent>
+
+          <TabsContent value="funnel">
+            <AdminFunnelReport />
           </TabsContent>
         </Tabs>
       </div>
