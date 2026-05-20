@@ -27,6 +27,7 @@ type FunnelRow = {
   apps: AppRow[];
   total: number;
   contactados: number;
+  enRevision: number;
   entrevistados: number;
   contratados: number;
   descartados: number;
@@ -218,13 +219,23 @@ export default function AdminFunnelReport() {
       const oApps = apps.filter(a => a.opening_id === opening.id);
       const total = oApps.length;
 
-      const count = (status: string) => oApps.filter(a => a.status === status || (status === "descartado" && a.status === "rechazado")).length;
+      // Count by history - how many candidates passed through each stage
+      const countByHistory = (status: string) => oApps.filter(a => {
+        const history: any[] = (a.status_history as any) || [];
+        const currentMatch = a.status === status || (status === "descartado" && (a.status === "rechazado" || a.status === "descartado"));
+        const historyMatch = history.some(h => h.status === status || (status === "descartado" && (h.status === "rechazado" || h.status === "descartado")));
+        return currentMatch || historyMatch;
+      }).length;
 
-      const contratados = count("contratado");
-      const entrevistados = count("entrevistado");
-      const contactados = count("contactado");
-      const descartados = count("descartado");
-      const nuevos = count("nuevo");
+      const contratados = countByHistory("contratado");
+      const entrevistados = countByHistory("entrevistado");
+      const contactados = countByHistory("contactado");
+      const enRevision = countByHistory("en_revision");
+      const descartados = countByHistory("descartado");
+      const nuevos = oApps.filter(a => {
+        const history: any[] = (a.status_history as any) || [];
+        return a.status === "nuevo" && history.length === 0;
+      }).length;
 
       const conversionRate = total > 0 ? Math.round((contratados / total) * 100) : 0;
       const entrevistaRate = total > 0 ? Math.round((entrevistados / total) * 100) : 0;
@@ -262,7 +273,7 @@ export default function AdminFunnelReport() {
 
       return {
         opening, apps: oApps, total,
-        contactados, entrevistados, contratados,
+        contactados, enRevision, entrevistados, contratados,
         descartados, nuevos,
         conversionRate, entrevistaRate,
         diasTotales, stageTimeline,
