@@ -20,7 +20,7 @@ interface Props {
   onUpdate: (id: string, patch: Partial<JobApplication>) => void;
 }
 
-const STATUS_NEEDS_DATE = ["contactado", "entrevistado", "contratado"];
+const STATUS_NEEDS_DATE = ["contactado", "entrevistado", "contratado", "descartado"];
 const STATUS_DATE_LABEL: Record<string, string> = {
   contactado: "Fecha de contacto",
   entrevistado: "Fecha de entrevista",
