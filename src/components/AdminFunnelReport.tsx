@@ -223,7 +223,6 @@ export default function AdminFunnelReport() {
       const contratados = count("contratado");
       const entrevistados = count("entrevistado");
       const contactados = count("contactado");
-      const enRevision = count("en_revision");
       const descartados = count("descartado");
       const nuevos = count("nuevo");
 
@@ -263,7 +262,7 @@ export default function AdminFunnelReport() {
 
       return {
         opening, apps: oApps, total,
-        contactados, enRevision, entrevistados, contratados,
+        contactados, entrevistados, contratados,
         descartados, nuevos,
         conversionRate, entrevistaRate,
         diasTotales, stageTimeline,
