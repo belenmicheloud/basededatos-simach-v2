@@ -16,7 +16,6 @@ export type StatusHistoryEntry = {
 export const STATUS_LABELS: Record<ApplicationStatus, string> = {
   nuevo: "Nuevo",
   contactado: "Contactado",
-  en_revision: "En revision",
   entrevistado: "Entrevistado",
   contratado: "Contratado",
   rechazado: "Descartado",
