@@ -27,7 +27,6 @@ type FunnelRow = {
   apps: AppRow[];
   total: number;
   contactados: number;
-  enRevision: number;
   entrevistados: number;
   contratados: number;
   descartados: number;
