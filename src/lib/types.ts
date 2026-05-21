@@ -94,10 +94,10 @@ export const CITIES = [
 
 export const YEARS_EXPERIENCE = [
   "Sin experiencia",
-  "Menos de 1 anio",
-  "1 a 3 anios",
-  "3 a 5 anios",
-  "Mas de 5 anios",
+  "Menos de 1 año",
+  "1 a 3 años",
+  "3 a 5 años",
+  "Mas de 5 años",
 ];
 
 export const AREAS = [
