@@ -160,12 +160,17 @@ export default function AdminOpenings() {
   };
 
   const toggleActive = async (id: string, current: boolean) => {
-    const { error } = await supabase.from("job_openings").update({ is_active: !current }).eq("id", id);
+    const { data, error } = await supabase
+      .from("job_openings")
+      .update({ is_active: !current })
+      .eq("id", id)
+      .select()
+      .single();
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      setOpenings(prev => prev.map(o => o.id === id ? { ...o, is_active: !current } : o));
+      setOpenings(prev => prev.map(o => o.id === id ? { ...o, is_active: (data as Opening).is_active } : o));
     }
   };
 
